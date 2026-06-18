@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Near-Earth Objects Tracker API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: neo
+    description: Near-Earth Objects
 paths:
   /healthz:
     get:
@@ -24,6 +26,89 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /neo/approaching:
+    get:
+      operationId: getApproachingNeo
+      tags: [neo]
+      summary: Get approaching near-Earth objects
+      description: Returns all NEOs approaching Earth within the next 7 days
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 7
+            minimum: 1
+            maximum: 7
+          description: Number of days to look ahead (max 7 per NASA API)
+      responses:
+        "200":
+          description: List of approaching NEOs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NeoListResponse"
+        "500":
+          description: Error fetching from NASA API
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /neo/stats:
+    get:
+      operationId: getNeoStats
+      tags: [neo]
+      summary: Get NEO summary statistics
+      description: Returns summary stats for approaching objects in the next 7 days
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NeoStats"
+        "500":
+          description: Error fetching from NASA API
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /neo/{id}:
+    get:
+      operationId: getNeoById
+      tags: [neo]
+      summary: Get a single NEO by ID
+      description: Returns detailed information about a specific near-Earth object
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: NEO detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NeoObject"
+        "404":
+          description: NEO not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Error fetching from NASA API
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +119,133 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    CloseApproach:
+      type: object
+      properties:
+        date:
+          type: string
+        missDistanceKm:
+          type: number
+        missDistanceLunar:
+          type: number
+        missDistanceAu:
+          type: number
+        relativeVelocityKmS:
+          type: number
+        relativeVelocityKmH:
+          type: number
+        orbitingBody:
+          type: string
+      required:
+        - date
+        - missDistanceKm
+        - missDistanceLunar
+        - missDistanceAu
+        - relativeVelocityKmS
+        - relativeVelocityKmH
+        - orbitingBody
+
+    NeoObject:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nasaJplUrl:
+          type: string
+        absoluteMagnitudeH:
+          type: number
+        estimatedDiameterMinKm:
+          type: number
+        estimatedDiameterMaxKm:
+          type: number
+        isPotentiallyHazardous:
+          type: boolean
+        isSentryObject:
+          type: boolean
+        closeApproaches:
+          type: array
+          items:
+            $ref: "#/components/schemas/CloseApproach"
+        nextCloseApproach:
+          $ref: "#/components/schemas/CloseApproach"
+        orbitClass:
+          type: string
+        orbitClassDescription:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - nasaJplUrl
+        - absoluteMagnitudeH
+        - estimatedDiameterMinKm
+        - estimatedDiameterMaxKm
+        - isPotentiallyHazardous
+        - isSentryObject
+        - closeApproaches
+        - nextCloseApproach
+        - orbitClass
+        - orbitClassDescription
+
+    NeoListResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            $ref: "#/components/schemas/NeoObject"
+        fetchedAt:
+          type: string
+        dateRangeStart:
+          type: string
+        dateRangeEnd:
+          type: string
+      required:
+        - objects
+        - fetchedAt
+        - dateRangeStart
+        - dateRangeEnd
+
+    NeoStats:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+        hazardousCount:
+          type: integer
+        closestApproachKm:
+          type: number
+        closestObjectName:
+          type: string
+        fastestVelocityKmS:
+          type: number
+        fastestObjectName:
+          type: string
+        largestDiameterKm:
+          type: number
+        largestObjectName:
+          type: string
+        sentryCount:
+          type: integer
+        fetchedAt:
+          type: string
+      required:
+        - totalCount
+        - hazardousCount
+        - closestApproachKm
+        - closestObjectName
+        - fastestVelocityKmS
+        - fastestObjectName
+        - largestDiameterKm
+        - largestObjectName
+        - sentryCount
+        - fetchedAt
