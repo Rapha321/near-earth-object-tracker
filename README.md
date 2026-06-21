@@ -8,9 +8,7 @@ An immersive **3D space dashboard** that tracks all asteroids approaching Earth 
 
 **[→ Open the app](https://celestial-approaching-objects--rapha321.replit.app/)**
 
-<video src="https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-!["Demo NEO"](https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.mp4)
+!["Demo NEO"](https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.gif)
 
 > The 3D scene (Earth + orbiting asteroids) requires a GPU-capable browser. The data panels work everywhere.
 
