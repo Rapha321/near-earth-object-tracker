@@ -30,26 +30,26 @@ function deterministicInclination(id: string): number {
   return ((h * 0.3819660112) % 1 - 0.5) * (Math.PI * 0.45);
 }
 
-function buildFlybyCurve(
+function buildStraightTrajectory(
   baseAngle: number,
   periapsis: number,
   inclination: number
-): THREE.CatmullRomCurve3 {
+) {
   const far = Math.max(periapsis * 5, 18);
-  const halfTurn = THREE.MathUtils.lerp(
-    Math.PI * 0.38, Math.PI * 0.10,
-    Math.min(periapsis / 12, 1)
+  const periapsisPoint = new THREE.Vector3(
+    Math.cos(baseAngle) * periapsis,
+    0,
+    Math.sin(baseAngle) * periapsis
   );
-  const inA = baseAngle + halfTurn;
-  const outA = baseAngle - halfTurn;
-  const inc = inclination;
-  return new THREE.CatmullRomCurve3([
-    new THREE.Vector3(Math.cos(inA) * far,           Math.sin(inc) * far * 0.30,           Math.sin(inA) * far),
-    new THREE.Vector3(Math.cos(inA) * periapsis * 2.5, Math.sin(inc) * periapsis * 0.50,   Math.sin(inA) * periapsis * 2.5),
-    new THREE.Vector3(Math.cos(baseAngle) * periapsis, 0,                                   Math.sin(baseAngle) * periapsis),
-    new THREE.Vector3(Math.cos(outA) * periapsis * 2.5, -Math.sin(inc) * periapsis * 0.50, Math.sin(outA) * periapsis * 2.5),
-    new THREE.Vector3(Math.cos(outA) * far,           -Math.sin(inc) * far * 0.30,          Math.sin(outA) * far),
-  ]);
+  // Travel direction: perpendicular to Earth→periapsis vector, tilted by inclination
+  const travelDir = new THREE.Vector3(
+    -Math.sin(baseAngle) * Math.cos(inclination),
+    Math.sin(inclination),
+    Math.cos(baseAngle) * Math.cos(inclination)
+  ).normalize();
+  const start = periapsisPoint.clone().addScaledVector(travelDir,  far);
+  const end   = periapsisPoint.clone().addScaledVector(travelDir, -far);
+  return { start, end, periapsisPoint, travelDir, far };
 }
 
 function trajectoryT(approachDateStr: string): number {
@@ -128,13 +128,16 @@ function NeoObject({
     Math.max(1.5, Math.min(neo.nextCloseApproach.missDistanceLunar * 2, 14)),
     [neo.nextCloseApproach.missDistanceLunar]
   );
-  const curve        = useMemo(() => buildFlybyCurve(baseAngle, periapsis, inclination), [baseAngle, periapsis, inclination]);
+  const traj         = useMemo(() => buildStraightTrajectory(baseAngle, periapsis, inclination), [baseAngle, periapsis, inclination]);
   const t0           = useMemo(() => trajectoryT(neo.nextCloseApproach.date), [neo.nextCloseApproach.date]);
-  const periapsisPos = useMemo(() => curve.getPoint(0.5), [curve]);
+  const periapsisPos = traj.periapsisPoint;
 
   const linePoints = useMemo(
-    () => curve.getPoints(80).map(p => [p.x, p.y, p.z] as [number, number, number]),
-    [curve]
+    () => [
+      [traj.start.x, traj.start.y, traj.start.z] as [number, number, number],
+      [traj.end.x,   traj.end.y,   traj.end.z  ] as [number, number, number],
+    ],
+    [traj]
   );
 
   const hazard = neo.isPotentiallyHazardous;
@@ -150,7 +153,9 @@ function NeoObject({
 
   useFrame(() => {
     if (!meshRef.current) return;
-    const pos = curve.getPoint(t0);
+    // Linear position along the straight trajectory: t0=0.5 → periapsis, t0<0.5 → incoming, t0>0.5 → outgoing
+    const param = (2 * t0 - 1) * traj.far;
+    const pos = traj.periapsisPoint.clone().addScaledVector(traj.travelDir, -param);
     meshRef.current.position.set(pos.x, pos.y, pos.z);
     meshRef.current.rotation.y += 0.008;
   });
