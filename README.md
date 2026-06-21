@@ -10,6 +10,8 @@ An immersive **3D space dashboard** that tracks all asteroids approaching Earth 
 
 <video src="https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
+!["Demo NEO"](https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.mp4)
+
 > The 3D scene (Earth + orbiting asteroids) requires a GPU-capable browser. The data panels work everywhere.
 
 ---
