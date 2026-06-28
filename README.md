@@ -38,20 +38,38 @@ An immersive **3D space dashboard** that tracks all asteroids approaching Earth 
 | **API Contract** | OpenAPI 3.1 spec → codegen (hooks + Zod schemas) |
 | **Validation** | Zod v4 |
 | **Build** | esbuild (server), Vite (client) |
-| **Hosting** | Replit Deployments |
+| **Hosting** | Vercel |
 
 ---
 
 ## 🤖 Built with AI
 
-This entire application was built through **prompt engineering with the Replit AI Agent** — no manual coding. The development workflow:
+This entire application was built through **prompt engineering with AI agents** — no manual coding. The development workflow:
 
-1. Described the product idea to the Replit Agent in plain English
+1. Described the product idea to the Replit AI Agent in plain English
 2. The agent scaffolded the full pnpm monorepo, designed the OpenAPI contract, implemented the Express backend, and built all React components
 3. Iterative refinements (3D scene, error boundaries, caching, seed fallback) were done through natural language prompts
 4. The agent handled TypeScript types, codegen pipelines, and deployment configuration automatically
 
-> **Replit Agent** is an autonomous AI coding assistant that can build, run, debug, and deploy full-stack applications from a conversation.
+### 🎨 Realistic 3D Visuals — Cursor AI Agent
+
+The realistic visual effects for the **Earth and near-Earth asteroids** in the 3D scene were added using the **[Cursor](https://www.cursor.com) AI Agent**. This included:
+
+- Photorealistic Earth rendering with texture mapping, atmospheric glow, and cloud layers
+- Realistic asteroid surface shading and geometry
+- Enhanced lighting and space environment effects
+
+Cursor's AI agent was prompted to improve the Three.js scene iteratively, producing the immersive visuals without writing the shader and material code by hand.
+
+### 🐛 Debugging — Claude (Anthropic)
+
+Deployment issues and runtime bugs were debugged with **[Claude](https://claude.ai)** by Anthropic. Claude helped diagnose and fix:
+
+- Vercel build failures caused by Next.js-specific `"use client"` directives in shadcn/ui components
+- Misconfigured build settings (root directory, output directory, install command) for a pnpm monorepo on Vercel
+- A broken `/api` proxy rewrite in `vercel.json` that was silently dropping all backend requests
+
+> **Replit Agent** is an autonomous AI coding assistant that can build, run, debug, and deploy full-stack applications from a conversation. **Cursor Agent** is an AI-powered code editor that can make targeted, context-aware changes to an existing codebase through natural language. **Claude** is an AI assistant by Anthropic used here for deployment debugging and troubleshooting.
 
 ---
 
