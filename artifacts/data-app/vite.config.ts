@@ -3,50 +3,44 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+const rawPort = process.env.PORT || "5173";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
+const basePath = process.env.BASE_PATH || "/";
 
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
+const plugins = [
+  react(),
+  tailwindcss(),
+];
+
+// Only load Replit plugins in dev environment
+if (process.env.NODE_ENV !== "production" && process.env.REPL_ID) {
+  plugins.push(
+    await import("@replit/vite-plugin-runtime-error-modal").then((m) =>
+      m.default(),
+    ).catch(() => null),
+  );
+  plugins.push(
+    await import("@replit/vite-plugin-cartographer").then((m) =>
+      m.cartographer({
+        root: path.resolve(import.meta.dirname, ".."),
+      }),
+    ).catch(() => null),
+  );
+  plugins.push(
+    await import("@replit/vite-plugin-dev-banner").then((m) =>
+      m.devBanner(),
+    ).catch(() => null),
   );
 }
 
 export default defineConfig({
   base: basePath,
-  plugins: [
-    react(),
-    tailwindcss(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-runtime-error-modal").then((m) =>
-            m.default(),
-          ),
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
+  plugins: plugins.filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
@@ -59,10 +53,11 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     sourcemap: false,
+    minify: "terser",
   },
   server: {
     port,
-    strictPort: true,
+    strictPort: false,
     host: "0.0.0.0",
     allowedHosts: true,
     hmr: {
