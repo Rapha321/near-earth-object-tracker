@@ -1,9 +1,11 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, Suspense, Component, type ReactNode } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Sphere, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGetApproachingNeo } from '@workspace/api-client-react';
-import { Component, type ReactNode } from 'react';
+import Earth from './scene/Earth';
+import Sun, { SunLight } from './scene/Sun';
+import DistantPlanets from './scene/DistantPlanets';
 
 class WebGLErrorBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -55,21 +57,6 @@ function buildStraightTrajectory(
 function trajectoryT(approachDateStr: string): number {
   const days = (new Date(approachDateStr).getTime() - Date.now()) / 86400000;
   return Math.max(0.03, Math.min(0.97, 0.5 - days / 14));
-}
-
-function Earth() {
-  const earthRef = useRef<THREE.Mesh>(null);
-  useFrame(() => { if (earthRef.current) earthRef.current.rotation.y += 0.001; });
-  return (
-    <group>
-      <Sphere ref={earthRef} args={[1, 64, 64]}>
-        <meshStandardMaterial color="#1e5c8c" emissive="#0d2b45" emissiveIntensity={0.2} roughness={0.8} />
-      </Sphere>
-      <Sphere args={[1.05, 32, 32]}>
-        <meshBasicMaterial color="#4ea8de" transparent opacity={0.15} blending={THREE.AdditiveBlending} />
-      </Sphere>
-    </group>
-  );
 }
 
 function PeriapsisMarker({ position, isHazardous }: { position: THREE.Vector3; isHazardous: boolean }) {
@@ -228,10 +215,14 @@ function SceneContents({ selectedNeoId, onSelectNeo }: { selectedNeoId: string |
   return (
     <>
       <color attach="background" args={["#030308"]} />
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={1.5} />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <Earth />
+      <SunLight />
+      <Stars radius={120} depth={60} count={6000} factor={4} saturation={0} fade speed={0.5} />
+
+      <Suspense fallback={null}>
+        <Sun />
+        <Earth />
+        <DistantPlanets />
+      </Suspense>
 
       {data?.objects.map(neo => (
         <NeoObject
@@ -242,7 +233,7 @@ function SceneContents({ selectedNeoId, onSelectNeo }: { selectedNeoId: string |
         />
       ))}
 
-      <OrbitControls enablePan enableZoom minDistance={2} maxDistance={22} />
+      <OrbitControls enablePan enableZoom minDistance={2} maxDistance={50} />
     </>
   );
 }
@@ -259,7 +250,10 @@ const NoWebGLFallback = () => (
 export default function Scene({ selectedNeoId, onSelectNeo }: { selectedNeoId: string | null; onSelectNeo: (id: string) => void }) {
   return (
     <WebGLErrorBoundary fallback={<NoWebGLFallback />}>
-      <Canvas camera={{ position: [0, 6, 12], fov: 45 }}>
+      <Canvas
+        camera={{ position: [0, 6, 12], fov: 45 }}
+        gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
+      >
         <SceneContents selectedNeoId={selectedNeoId} onSelectNeo={onSelectNeo} />
       </Canvas>
     </WebGLErrorBoundary>
