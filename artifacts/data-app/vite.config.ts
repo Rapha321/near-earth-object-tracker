@@ -53,7 +53,6 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     sourcemap: false,
-    minify: "terser",
   },
   server: {
     port,
