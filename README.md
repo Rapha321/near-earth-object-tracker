@@ -6,7 +6,7 @@ An immersive **3D space dashboard** that tracks all asteroids approaching Earth 
 
 ## 🚀 Live Demo
 
-**[→ Open the app](https://celestial-approaching-objects--rapha321.replit.app/)**
+**[→ Open the app](https://near-earth-object-tracker-data-app.vercel.app/)**
 
 !["Demo NEO"](https://github.com/Rapha321/near-earth-object-tracker/blob/main/screenshots/NearEarthObject.gif)
 

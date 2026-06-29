@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://near-earth-object-tracker-api-server-5brlwhezn.vercel.app/api/:path*"
+      "destination": "https://near-earth-object-tracker-api-serve.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",
